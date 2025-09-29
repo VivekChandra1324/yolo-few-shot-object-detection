@@ -1,0 +1,109 @@
+
+# ===================================================================
+# BASE CONFIGURATION — GLOBAL DEFAULTS FOR TWO-STAGE FEW-SHOT TRAINING
+# Notes:
+# - Serves as the single source of truth for common hyperparameters.
+# - Stage-specific YAMLs (e.g., task2_stage1.yaml, task2_stage2.yaml) override
+#   only what they need (e.g., task name, freeze depth, lr0).
+# - The notebook orchestrates Stage 1 and Stage 2 by merging configs.
+# ===================================================================
+
+# --- Core Settings ---
+seed: 42
+num_classes: 85 # 80 base COCO classes + 5 novel HomeObjects classes
+
+# --- Hardware & Performance ---
+device: "0,1"
+validation_device: "0"
+workers: 2
+amp: true
+cache: false
+
+# --- Training Loop Parameters ---
+epochs: 75
+patience: 30
+imgsz: 640
+val_interval: 4
+
+# --- Optimizer ---
+optimizer: "AdamW"
+batch: 512
+weight_decay: 0.0005
+lrf: 0.01
+cos_lr: true
+
+# --- Progressive Training Phases ---
+phase_patience: 40
+phase_transition_mAP_threshold: 0.65
+mixing_phases:
+  - {novel_ratio: 0.05}
+  - {novel_ratio: 0.1}
+  - {novel_ratio: 0.25}
+  - {novel_ratio: 0.5}
+  - {novel_ratio: 0.75}
+  - {novel_ratio: 0.9}
+
+# --- Loss Weights ---
+box: 7.5
+cls: 1.5
+dfl: 1.5
+
+# --- Warmup Parameters ---
+warmup_epochs: 5.0
+warmup_momentum: 0.8
+warmup_bias_lr: 0.01
+
+# --- Data Augmentation Strategy ---
+mosaic: 0.25
+mixup: 0.3
+randaugment:
+  enabled: true
+  num_ops: 2
+  magnitude: 7
+  mstd: 0.4
+
+# All other Ultralytics built-in augmentations are disabled (handled via RandAugment only)
+hsv_h: 0.0
+hsv_s: 0.0
+hsv_v: 0.0
+degrees: 0.0
+translate: 0.0
+scale: 0.0
+shear: 0.0
+perspective: 0.0
+flipud: 0.0
+fliplr: 0.0
+copy_paste: 0.0
+
+# --- Training Control & Output ---
+plots: true
+output_dir: "outputs"
+save_period: 10
+
+
+
+# --- Dataset Source ---
+# The current setup uses the 10-shot HomeObjects split. Shot counts are controlled
+# here; stage YAMLs do not change dataset composition.
+dataset:
+  hf_repos:
+    coco_143:
+      repo_id: "VivekChandra/COCO_143"
+      filename: "coco_143_sample.zip"
+    homeobjects_14: # Using the original key for the 10-shot dataset
+      repo_id: "VivekChandra/HomeObjects-3K_5class_14_per_class"
+      filename: "HomeObjects-3K_5class_14_per_class.zip"
+  homeobjects:
+    total_images_per_class: 14
+    train_shots: 10
+    val_shots: 3
+    test_shots: 1
+
+# --- Evaluation & Analysis ---
+conf_threshold: 0.25
+iou_threshold: 0.5
+max_det: 300
+
+# --- Custom Evaluation ---
+evaluation:
+  safety_net_threshold: 0.40

@@ -1,0 +1,23 @@
+
+# ===================================================================
+# STAGE 2 CONFIG: 20-SHOT EXPERIMENT
+#
+# Purpose: Fine-tune more layers (deeper unfreeze) using a low learning rate
+#          after Stage 1. This file is merged with `base_config.yaml` at run.
+# ===================================================================
+
+# --- Task Metadata ---
+task_name: "task_20shot_stage2_finetune_model"
+description: >
+  Stage 2: Unfreeze more layers and fine-tune the 20-shot model with a very low LR.
+
+# --- Model to Start From ---
+# This path will be programmatically replaced by the notebook/script to point
+# to Stage 1's best checkpoint before training begins.
+model_name: "PATH_TO_STAGE_1_BEST_MODEL.pt"
+
+# --- Stage-Specific Settings ---
+# Note: Batch size is defined globally in `base_config.yaml`.
+freeze: 18
+lr0: 0.000067  # Re-scaled for the batch size of 512
+max_phase_epochs: 100

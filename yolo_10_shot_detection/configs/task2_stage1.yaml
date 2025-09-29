@@ -1,0 +1,22 @@
+# configs/task2_stage1.yaml
+
+# ===================================================================
+# STAGE 1 CONFIG — TRAIN DETECTION HEAD (10-SHOT)
+# Purpose: Initialize from a base model and focus training on the detection
+#          head with most backbone layers frozen. Uses base_config defaults
+#          unless explicitly overridden below.
+# ===================================================================
+
+# --- Task Metadata ---
+task_name: "task_10shot_stage1_train_head"
+description: >
+  Stage 1: Train ONLY the detection head on the 10-shot novel classes.
+
+# --- Model to Start From ---
+model_name: "yolo11n.pt"
+
+# --- Stage-Specific Settings ---
+# freeze: Number of initial backbone layers to keep frozen (higher = more frozen)
+freeze: 22           # Train primarily the head; neck/backbone remain mostly frozen
+lr0: 0.001
+max_phase_epochs: 75

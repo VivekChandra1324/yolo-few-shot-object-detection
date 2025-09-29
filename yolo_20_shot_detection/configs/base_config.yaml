@@ -1,0 +1,113 @@
+
+# ===================================================================
+# BASE CONFIGURATION
+#
+# Purpose: Shared defaults for the 20-shot, two-stage workflow. Stage-specific
+#          overrides live in `task2_stage1.yaml` and `task2_stage2.yaml`.
+# Scope:   Safe to merge with task configs; contains only global settings.
+# ===================================================================
+
+# --- Core Settings ---
+seed: 42
+num_classes: 85 # 80 base COCO classes + 5 novel HomeObjects classes
+
+# --- Hardware & Performance ---
+# `device` accepts typical Ultralytics formats, e.g. "cpu", "0", "0,1".
+# Note: Multi-GPU usually requires launching with torch.distributed.
+device: "0,1"
+validation_device: "0"
+workers: 2
+amp: true
+cache: false
+
+# --- Training Loop Parameters ---
+epochs: 75
+patience: 30
+imgsz: 640
+val_interval: 4
+
+# --- Optimizer ---
+# `batch` is the global effective batch size. Adjust to your hardware.
+optimizer: "AdamW"
+batch: 512
+weight_decay: 0.0005
+lrf: 0.01
+cos_lr: true
+
+# --- Progressive Training Phases ---
+# Phases progressively mix novel images into training according to `novel_ratio`.
+phase_patience: 40
+phase_transition_mAP_threshold: 0.65
+mixing_phases:
+  - {novel_ratio: 0.05}
+  - {novel_ratio: 0.1}
+  - {novel_ratio: 0.25}
+  - {novel_ratio: 0.5}
+  - {novel_ratio: 0.75}
+  - {novel_ratio: 0.9}
+
+# --- Loss Weights ---
+box: 7.5
+cls: 1.5
+dfl: 1.5
+
+# --- Warmup Parameters ---
+warmup_epochs: 5.0
+warmup_momentum: 0.8
+warmup_bias_lr: 0.01
+
+# --- Data Augmentation Strategy ---
+# RandAugment from `timm` is the only active augmentation. All built-ins are
+# disabled for clarity and reproducibility unless explicitly enabled here.
+mosaic: 0.25
+mixup: 0.3
+randaugment:
+  enabled: true
+  num_ops: 2
+  magnitude: 7
+  mstd: 0.4
+
+# All other built-in augmentations are disabled
+hsv_h: 0.0
+hsv_s: 0.0
+hsv_v: 0.0
+degrees: 0.0
+translate: 0.0
+scale: 0.0
+shear: 0.0
+perspective: 0.0
+flipud: 0.0
+fliplr: 0.0
+copy_paste: 0.0
+
+# --- Training Control & Output ---
+# `output_dir` collects runs, models, history, and plots.
+plots: true
+output_dir: "outputs"
+save_period: 10
+
+# --- Dataset Source (20-shot experiment) ---
+# Datasets are pulled from Hugging Face Hub if not present locally.
+dataset:
+  hf_repos:
+    coco_143:
+      repo_id: "VivekChandra/COCO_143"
+      filename: "coco_143_sample.zip"
+    homeobjects_29:
+      repo_id: "VivekChandra/HomeObjects-3K_5class_29_per_class"
+      filename: "HomeObjects-3K_5class_29_per_class.zip"
+  homeobjects:
+    total_images_per_class: 29
+    train_shots: 20
+    val_shots: 6
+    test_shots: 3
+
+# --- Evaluation & Analysis ---
+conf_threshold: 0.25
+iou_threshold: 0.5
+max_det: 300
+
+# --- Custom Evaluation ---
+# Safety net threshold is applied to base-class mAP during model selection.
+evaluation:
+  safety_net_threshold: 0.40

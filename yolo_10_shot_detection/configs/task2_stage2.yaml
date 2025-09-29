@@ -1,0 +1,27 @@
+# configs/task2_stage2.yaml
+
+# ===================================================================
+# STAGE 2 CONFIG — FINE-TUNE MODEL (10-SHOT)
+# Purpose: Resume from Stage 1 best checkpoint, unfreeze additional layers,
+#          and fine-tune with a very low LR. Uses base_config defaults unless
+#          overridden below.
+# ===================================================================
+
+# --- Task Metadata ---
+task_name: "task_10shot_stage2_finetune_model"
+description: >
+  Stage 2: Unfreeze the neck and fine-tune the 10-shot model with a very low LR.
+
+
+# --- Model to Start From ---
+# The notebook automatically replaces this placeholder with Stage 1 best.
+model_name: "PATH_TO_STAGE_1_BEST_MODEL.pt"
+
+# --- Stage-Specific Settings ---
+# Note: Batch size is defined globally in base_config.yaml.
+# freeze: Keep fewer layers frozen than Stage 1 to expose more capacity.
+# lr0: Very low learning rate recommended for fine-tuning.
+# max_phase_epochs: Upper bound per progressive phase (early exit may occur).
+freeze: 20
+lr0: 0.000067  # Re-scaled for the batch size of 512
+max_phase_epochs: 100

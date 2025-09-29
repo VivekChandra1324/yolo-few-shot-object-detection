@@ -1,0 +1,26 @@
+# configs/task2_stage1.yaml
+
+# ===================================================================
+# STAGE 1 CONFIG: 20-SHOT EXPERIMENT
+#
+# Purpose: Fine-tune primarily the detection head (and part of the neck) on
+#          the 20-shot novel classes. This file is merged with
+#          `base_config.yaml` at runtime.
+# ===================================================================
+
+# --- Task Metadata ---
+task_name: "task_20shot_stage1_train_head"
+description: >
+  Stage 1: Train the head and neck on the 20-shot novel classes.
+
+# --- Model to Start From ---
+# Accepts any Ultralytics model alias or path to a local checkpoint.
+model_name: "yolo11n.pt"
+
+# --- Stage-Specific Settings ---
+# `freeze`: number of early modules to freeze (higher = more backbone frozen)
+# `lr0`:    base learning rate for this stage
+# `max_phase_epochs`: maximum epochs; phase may stop early via thresholds
+freeze: 20           # Unfreeze the neck for better learning with more data
+lr0: 0.001
+max_phase_epochs: 75
