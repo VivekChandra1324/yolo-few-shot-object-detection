@@ -2,7 +2,7 @@
 
 A comprehensive pipeline for few-shot object detection using YOLO models with **two-stage progressive training** and intelligent curriculum learning. This project enables training YOLO models on limited data samples (10-shot and 20-shot scenarios) while maintaining high detection accuracy through advanced training strategies.
 
-## 🎯 Overview
+## Overview
 
 This repository implements a sophisticated few-shot learning pipeline that uses:
 - **Two-Stage Training Architecture**: Head training followed by full model fine-tuning
@@ -27,14 +27,14 @@ This repository implements a sophisticated few-shot learning pipeline that uses:
 
 ### Key Features
 
-- 🔄 **Two-Stage Progressive Training**: Stage 1 (head training) → Stage 2 (fine-tuning)
-- 📊 **Dual Shot Scenarios**: 10-shot (14 images per class) and 20-shot (29 images per class)
-- 🎨 **Advanced Augmentation**: RandAugment with mosaic and mixup
-- 📈 **Comprehensive Evaluation**: Base vs novel class performance analysis
-- 🔧 **Hierarchical Configuration**: Base config + stage-specific overrides
-- 🚀 **Production Ready**: Modular architecture with Hugging Face Hub integration
+- **Two-Stage Progressive Training**: Stage 1 (head training) → Stage 2 (fine-tuning)
+- **Dual Shot Scenarios**: 10-shot (14 images per class) and 20-shot (29 images per class)
+- **Advanced Augmentation**: RandAugment with mosaic and mixup
+- **Comprehensive Evaluation**: Base vs novel class performance analysis
+- **Hierarchical Configuration**: Base config + stage-specific overrides
+- **Production Ready**: Modular architecture with Hugging Face Hub integration
 
-## 🏗️ Architecture
+## Architecture
 
 The project contains two parallel pipelines optimized for different shot scenarios:
 
@@ -71,7 +71,7 @@ src/
     └── config_validator.py     # Configuration merging & validation
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -110,7 +110,7 @@ dataset_manager.setup_datasets("task2")
 trainer.run_training()
 ```
 
-## 📊 Dataset Configuration
+## Dataset Configuration
 
 ### Supported Datasets
 
@@ -136,15 +136,7 @@ The pipeline integrates datasets from Hugging Face Hub:
 - Validation: 6 shots
 - Test: 3 shots
 
-### Automatic Data Pipeline
-
-The `DatasetManager` handles:
-- ✅ HF Hub dataset downloading and extraction
-- ✅ Label remapping (novel classes follow base classes: 0-79 → base, 80-84 → novel)
-- ✅ YOLO format validation and conversion
-- ✅ Progressive phase training manifest generation
-
-## 🎓 Two-Stage Training Pipeline
+## Two-Stage Training Pipeline
 
 ### Stage Architecture
 
@@ -188,7 +180,7 @@ phase_patience: 40       # Phase transition patience
 phase_transition_mAP_threshold: 0.65
 ```
 
-## 📈 Advanced Features
+## Advanced Features
 
 ### RandAugment Integration
 
@@ -213,7 +205,7 @@ Additional augmentations:
 - **Checkpoint Recovery**: Automatic best model selection
 - **Parameter Analysis**: Trainable vs frozen parameter logging
 
-## ⚙️ Configuration System
+## Configuration System
 
 ### Hierarchical Configuration
 
@@ -223,155 +215,8 @@ The system uses a three-level hierarchy:
 2. **Stage Config** (`task2_stage1.yaml`, `task2_stage2.yaml`): Stage-specific overrides
 3. **Runtime Merging**: Configs merged at runtime using `load_and_merge_configs()`
 
-### 10-Shot Example
 
-**Base Configuration:**
-```yaml
-# base_config.yaml
-seed: 42
-num_classes: 85
-batch: 512
-dataset:
-  hf_repos:
-    homeobjects_14:  # 10-shot dataset
-      repo_id: "VivekChandra/HomeObjects-3K_5class_14_per_class"
-  homeobjects:
-    train_shots: 10
-    val_shots: 3
-    test_shots: 1
-```
-
-**Stage 1 Override:**
-```yaml
-# task2_stage1.yaml
-task_name: "task_10shot_stage1_train_head"
-model_name: "yolo11n.pt"
-freeze: 22
-lr0: 0.001
-max_phase_epochs: 75
-```
-
-## 📝 Usage Examples
-
-### Complete Two-Stage Training
-
-```python
-from src.utils.config_validator import load_and_merge_configs
-from src.data.dataset_manager import DatasetManager
-from src.training.progressive_trainer import ProgressiveTrainer
-from src.training.model_manager import ModelManager
-
-# Stage 1: Head Training
-stage1_config = load_and_merge_configs(
-    "configs/base_config.yaml", 
-    "configs/task2_stage1.yaml"
-)
-
-dataset_manager = DatasetManager(stage1_config)
-dataset_manager.setup_datasets("task2")
-
-model_manager = ModelManager(stage1_config, dataset_manager)
-trainer = ProgressiveTrainer(stage1_config, dataset_manager, model_manager)
-
-# Train Stage 1
-stage1_best = trainer.run_training()
-
-# Stage 2: Fine-tuning
-stage2_config = load_and_merge_configs(
-    "configs/base_config.yaml", 
-    "configs/task2_stage2.yaml"
-)
-# Update model path to Stage 1 best
-stage2_config['model_name'] = trainer.overall_best_model_path
-
-# Train Stage 2
-trainer2 = ProgressiveTrainer(stage2_config, dataset_manager, model_manager)
-final_model = trainer2.run_training()
-```
-
-### Custom Evaluation
-
-```python
-from src.evaluation.evaluator import Evaluator
-
-evaluator = Evaluator(config, dataset_manager)
-results = evaluator.evaluate_model(final_model)
-
-print(f"Overall mAP@0.5: {results['overall']['mAP50']:.3f}")
-print(f"Base Classes mAP: {results['base_classes']['mAP50']:.3f}")
-print(f"Novel Classes mAP: {results['novel_classes']['mAP50']:.3f}")
-```
-
-### Visualization
-
-```python
-from src.visualization.plotter import view_sample_images, save_training_plots, visualize_inference
-
-# View sample images (requires dataset object, not dataset_manager)
-# view_sample_images(dataset, num_samples=4, class_names=class_names)
-
-# Training progress plots
-save_training_plots(trainer.full_history_df, "outputs/plots", task_name="my_experiment")
-
-# Inference visualization
-visualize_inference(model, test_images, num_samples=4, conf_thresh=0.25)
-```
-
-## 🔧 Advanced Configuration
-
-### Learning Rate Scaling
-
-```python
-from src.utils.config_validator import calculate_scaled_learning_rate
-
-# Automatic LR scaling based on batch size
-scaled_lr = calculate_scaled_learning_rate(
-    base_lr=0.001,
-    base_batch_size=64,
-    new_batch_size=512
-)
-```
-
-### Loss Weight Optimization
-
-```yaml
-# Optimized for few-shot scenarios
-box: 7.5      # Bounding box loss weight  
-cls: 1.5      # Classification loss weight
-dfl: 1.5      # Distribution focal loss weight
-```
-
-## 🛠️ Implementation Notes
-
-### Task Implementation
-
-- **Dataset Key Mapping**: 
-  - 10-shot uses `homeobjects_14` key
-  - 20-shot uses `homeobjects_29` key
-- **Class Structure**: 85 total classes (80 COCO base + 5 HomeObjects novel)
-
-### Configuration Validation
-
-The system includes comprehensive validation:
-
-```python
-from src.utils.config_validator import validate_base_config, validate_config_file
-
-# Validate configuration
-errors = validate_base_config(config)
-if errors:
-    print("Configuration errors:", errors)
-```
-
-### Safety Net Evaluation
-
-The system implements a "safety net" to ensure base class performance doesn't degrade:
-
-- **Threshold**: 0.40 mAP@0.5 for base classes
-- **Selection Logic**: Only models that pass the safety net are considered for final selection
-- **Best Model**: Selected based on highest novel class mAP while maintaining base performance
-
-## 📊 Training Outputs
+## Training Outputs
 
 The pipeline generates several outputs:
 
@@ -381,13 +226,8 @@ The pipeline generates several outputs:
 - **Phase-specific checkpoints**: Individual model weights for each progressive phase
 
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Ultralytics YOLO for the YOLO implementation
 - Hugging Face Hub for dataset hosting
 - timm for RandAugment implementation
-
----
-
-**Author**: Vivek Chandra  
-**Repository**: [VivekChandra1324/yolo-few-shot-object-detection](https://github.com/VivekChandra1324/yolo-few-shot-object-detection)
